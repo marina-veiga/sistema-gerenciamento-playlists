@@ -12,36 +12,6 @@ diretamente com as operações sobre as músicas nas playlists*/
 #include "musica.h"
 #include "playlist.h"  // Para ter a definição completa de Playlist
 
-// FUNÇÕES AUXILIARES: converterSegundosParaMinutos e compararStringsInsensitivo
-
-static void converterSegundosParaMinutos(int segundos, int *min, int *seg) {
-    if (segundos < 0) {
-        *min = 0;
-        *seg = 0;
-        return;
-    }
-    
-    *min = segundos / 60;
-    *seg = segundos % 60;
-}
-
-static int compararStringsInsensitivo(const char *str1, const char *str2) {
-    while (*str1 && *str2) {
-        char c1 = tolower((unsigned char)*str1);
-        char c2 = tolower((unsigned char)*str2);
-        
-        if (c1 != c2) {
-            return c1 - c2;
-        }
-        
-        str1++;
-        str2++;
-    }
-    
-    return tolower((unsigned char)*str1) - tolower((unsigned char)*str2);
-}
-
-
 // FUNÇÔES PRINCIPAIS
 
 void exibirMusica(Musica m) {
@@ -190,3 +160,4 @@ void exibirTodasMusicasDaPlaylist(Playlist *p) {
         exibirMusica(p->musicas[i]);
     }
 }
+
