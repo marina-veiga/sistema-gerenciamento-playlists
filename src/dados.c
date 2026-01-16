@@ -84,4 +84,40 @@ int carregarPlaylists(const char *nomeArquivo, Playlist *playlists, int *quantid
 }   
 
 //salvar no arquivo as playlists criadas ou modificadas pelo usuário
-int salvarPlaylists(const char *nomeArquivo, Playlist *playlists, int quantidade);
+int salvarPlaylists(const char *nomeArquivo, Playlist *playlists, int quantidade) {
+
+    FILE *arq;
+
+    // abre o arquivo para escrita 
+    arq = fopen(nomeArquivo, "w");
+
+    if (arq == NULL) {
+        printf("Erro ao abrir o arquivo %s para escrita\n", nomeArquivo);
+        return 0; // erro ao abrir
+    }
+
+    // escreve o cabeçalho do CSV
+    fprintf(arq, "playlist,titulo,artista,duracao,genero,extra\n");
+
+    // percorre todas as playlists
+    for (int i = 0; i < quantidade; i++) {
+        // percorre todas as músicas da playlist atual
+        for (int j = 0; j < playlists[i].numMusicas; j++) {
+
+            // escreve uma linha no arquivo para cada música
+            fprintf(arq, "%s,%s,%s,%d,%s,%s\n",
+                playlists[i].nome,                            // nome da playlist
+                playlists[i].musicas[j].titulo,               // título da música
+                playlists[i].musicas[j].artista,              // artista
+                playlists[i].musicas[j].duracao,              // duração
+                playlists[i].musicas[j].genero,               // gênero
+                playlists[i].musicas[j].extra                 // extra (ano ou volume)
+            );
+        }
+    }
+
+    // fecha o arquivo
+    fclose(arq);
+
+    return 1; // salvou com sucesso
+}
