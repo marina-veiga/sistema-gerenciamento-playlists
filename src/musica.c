@@ -1,5 +1,3 @@
-/* NALU*/
-
 /* MUSICA.C (implementação do módulo de músicas) */
 
 /*Ele contém a lógica concreta das funções que lidam
@@ -160,4 +158,5 @@ void exibirTodasMusicasDaPlaylist(Playlist *p) {
         exibirMusica(p->musicas[i]);
     }
 }
+
 
