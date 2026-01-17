@@ -1,12 +1,16 @@
 #ifndef DADOS_H
 #define DADOS_H
 
+#include "musica.h"
 #include "playlist.h"
 
-//carrega as playlists já salvas no arquivo para a memória do programa
-int carregarPlaylists(const char *nomeArquivo, Playlist *playlists, int *quantidade);
+//carrega as músicas do arquivo CSV
+int carregarMusicas(Musica **catalogo);
 
 //salvar no arquivo as playlists criadas ou modificadas pelo usuário
-int salvarPlaylists(const char *nomeArquivo, Playlist *playlists, int quantidade);
+int salvarPlaylists(Playlist *playlists, int quantidade,Musica *catalogo); 
+
+//carrega todas as playlists do arquivo CSV e retorna o total de playlists carregadas
+int carregarPlaylists(Playlist **playlists);
 
 #endif

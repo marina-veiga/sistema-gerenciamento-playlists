@@ -1,36 +1,45 @@
 #ifndef MUSICA_H
-#define MUSICA_H    
+#define MUSICA_H
 
 #define MAX_NOME 100
-#define MAX_ARTISTA 50
-#define MAX_GENERO 30
-#define MAX_EXTRA 20
+#define MAX_GENERO 50
+
+// Forward declaration para resolver o problema de dependência circular
+struct Playlist;
 
 // Union para Informações Adicionais
 typedef union {
     int anoLancamento;
-    int numeroAlbum;
+    int volumeAlbum;
 } InfoExtra;
 
 // Struct – Música
 typedef struct {
+    int id;
     char titulo[MAX_NOME];
-    char artista[MAX_ARTISTA];
+    char artista[MAX_NOME];
     int duracao;              // em segundos
     char genero[MAX_GENERO];
-    char extra[MAX_EXTRA];    // usado no CSV
     InfoExtra info;
+    int tipoInfo;
 } Musica;
 
-// Declaração antecipada de Playlist
-struct Playlist;
-typedef struct Playlist Playlist;
 
-// Funções exigidas no PDF
+// Exibe os dados completos de uma música
 void exibirMusica(Musica m);
-int buscarMusicaPorTitulo(Playlist *p, char *titulo);
-int buscarMusicaPorArtista(Playlist *p, char *artista);
-void ordenarMusicasPorTitulo(Playlist *p);
-void ordenarMusicasPorDuracao(Playlist *p);
 
+// Busca uma música pelo título no catálogo
+int buscarMusicaPorTitulo(Musica *catalogo, int qtdMusicas, char *titulo);
+
+// Busca uma música pelo artista (substring)
+int buscarMusicaPorArtista(Musica *catalogo, int qtdMusicas, char *artista);
+
+// Ordena o catálogo de músicas por título (ordem alfabética)
+void ordenarMusicasPorTitulo(Musica *catalogo, int qtdMusicas);
+
+// Ordena o catálogo de músicas por duração (crescente)
+void ordenarMusicasPorDuracao(Musica *catalogo, int qtdMusicas);
+
+// Exibe todas as músicas de uma playlist usando o catálogo
+void exibirTodasMusicasDaPlaylist(struct Playlist *playlist, Musica *catalogo, int qtdMusicas);
 #endif

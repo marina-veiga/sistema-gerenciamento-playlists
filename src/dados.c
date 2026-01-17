@@ -6,118 +6,188 @@
 
 #define MaxLinhas 1000 //macro do máximo de linhas pra ler no arquivo
 
-//carrega as playlists já salvas no arquivo para a memória do programa
-int carregarPlaylists(const char *nomeArquivo, Playlist *playlists, int *quantidade){ 
+//carrega todas as musicas do arquivo csv para o programa
+int carregarMusicas(Musica **catalogo) {
+
     FILE *arq;
+    
+    arq = fopen("data/musicas.csv", "r");
 
-    arq = fopen(nomeArquivo, "r"); //abrir o arquivo pra leitura
-
-    if(arq == NULL){
-        printf("Erro ao abrir o arquivo %s\n", nomeArquivo);
-        return 0; //erro ao abrir
+    //verifica se o arquivo não foi aberto corretamente
+    if (!arq) {
+        printf("Erro ao abrir musicas.csv\n");
+        return 0; //nenhuma música foi carregada
     }
-    char linha[MaxLinhas];
-    int contador = 0; //contar quantas playlists foram lidas
+
+    int capacidade = 50; //capacidade inicial do vetor de músicas
+
+    int total = 0;   //controla quantas músicas já foram lidas
 
     
+    //alocação dinamica na memória reservando espaço para 50 estruturas do tipo Musica
+    *catalogo = malloc(sizeof(Musica) * capacidade);
 
-    // lê a primeira linha (cabeçalho) e descarta
-    fgets(linha, sizeof(linha), arq);
+    char linha[256]; 
+    fgets(linha, sizeof(linha), arq);  //lê e descarta a primeira linha (cabeçalho)
 
-    while(fgets(linha,sizeof(linha),arq)){ //lê cada linha do arquivo
-        // remove o '\n' do final da linha
-        linha[strcspn(linha, "\n")] = '\0';
 
-        //separar campos: nomePlaylist, titulo, artista, duracao, genero, extra
-        char *nomePlaylist = strtok(linha, ",");
-        char *titulo = strtok(NULL, ",");
-        char *artista = strtok(NULL, ",");
-        char *duracaoStr = strtok(NULL, ",");
-        char *genero = strtok(NULL, ",");
-        char *extra = strtok(NULL, ",");
+    //loop que lê o arquivo linha por linha
+    while (fscanf(arq,"%d,%[^,],%[^,],%d,%[^,],%d\n", 
+        &(*catalogo)[total].id, 
+        (*catalogo)[total].titulo,  
+        (*catalogo)[total].artista,
+        &(*catalogo)[total].duracao,
+        (*catalogo)[total].genero,
+        &(*catalogo)[total].info.anoLancamento) == 6) { //lê 6 campos por linha
+        
+        int valorLido = (*catalogo)[total].info.anoLancamento;
 
-        //ignora linhas inválidas
-        if (nomePlaylist == NULL || titulo == NULL || artista == NULL || duracaoStr == NULL) {
-            continue; // ignora essa linha e passa para a próxima
+        //decide se é ano ou volume automaticamente
+        if (valorLido > 1900) {
+            (*catalogo)[total].info.anoLancamento = valorLido;
+            (*catalogo)[total].tipoInfo = 1; // 1 = ano
+        } else {
+            (*catalogo)[total].info.volumeAlbum = valorLido;
+            (*catalogo)[total].tipoInfo = 2; // 2 = volume
         }
 
-        int duracao = atoi(duracaoStr); //converte a string da duração em número inteiro
+        total++; //incrementa contador de músicas
 
-        //percorre as playlists já carregadas para ver se a playlist atual já existe
-        int indexPlaylist = -1; //significa ainda não achou
+        //verifica se o vetor chegou ao limite da capacidade
+        if (total == capacidade) {
 
-        for (int i = 0; i < contador; i++){
-            if (strcmp(playlists[i].nome, nomePlaylist) == 0){  //se o nome da playlist do arquivo for igual a uma playlist que já está na memória
-                indexPlaylist = i; // salva o índice dessa playlist
-                break;
+            //dobra a capacidade do vetor
+            capacidade *= 2;
+
+            //realoca a memória para suportar mais músicas
+            Musica *temp = realloc(*catalogo, sizeof(Musica) * capacidade);
+            if (temp==NULL) { 
+                printf("Erro de realocação\n"); 
+                free(*catalogo);
+                fclose(arq);
+                return 0;
             }
+            *catalogo = temp;
         }
-
-        //se a playlist não foi encontrada, cria uma nova posição no array
-        if (indexPlaylist == -1){
-            indexPlaylist = contador; //usa a próxima posição livre do array de playlists
-            strcpy(playlists[indexPlaylist].nome, nomePlaylist); //copia o nome da playlist
-            playlists[indexPlaylist].numMusicas = 0; //começa sem músicas
-            playlists[indexPlaylist].duracaoTotal = 0; // uração total começa em 0
-            contador++;
-        }
-
-        //adicionar a música na playlist
-        int posMusic = playlists[indexPlaylist].numMusicas; //posição da nova música
-        strcpy(playlists[indexPlaylist].musicas[posMusic].titulo, titulo); //copia o título
-        strcpy(playlists[indexPlaylist].musicas[posMusic].artista, artista); //copia o artista
-        playlists[indexPlaylist].musicas[posMusic].duracao = duracao; // coloca a duração
-
-        strcpy(playlists[indexPlaylist].musicas[posMusic].genero, genero); //copia o gênero
-        strcpy(playlists[indexPlaylist].musicas[posMusic].extra, extra); //copia o extra (ano ou volume)
-    
-        // atualiza o número de músicas e a duração total da playlist
-        playlists[indexPlaylist].numMusicas++; //aumentamos o contador de músicas
-        playlists[indexPlaylist].duracaoTotal += duracao; //somamos a duração da nova música
     }
-    fclose(arq); // fecha o arquivo
 
-    *quantidade = contador;  //atualiza quantidade de playlists carregadas
+    //fecha o arquivo após terminar a leitura
+    fclose(arq);
 
-    return 1; 
-
-}   
+    //retorna a quantidade total de músicas carregadas
+    return total;
+}
 
 //salvar no arquivo as playlists criadas ou modificadas pelo usuário
-int salvarPlaylists(const char *nomeArquivo, Playlist *playlists, int quantidade) {
+int salvarPlaylists(Playlist *playlists, int quantidade,Musica *catalogo) {
 
     FILE *arq;
 
     // abre o arquivo para escrita 
-    arq = fopen(nomeArquivo, "w");
+    arq = fopen("data/playlists.csv", "w");
 
     if (arq == NULL) {
-        printf("Erro ao abrir o arquivo %s para escrita\n", nomeArquivo);
+        printf("Erro ao abrir playlists.csv para escrita\n");
         return 0; // erro ao abrir
     }
 
-    // escreve o cabeçalho do CSV
-    fprintf(arq, "playlist,titulo,artista,duracao,genero,extra\n");
-
-    // percorre todas as playlists
+    //percorre todas as playlists
     for (int i = 0; i < quantidade; i++) {
-        // percorre todas as músicas da playlist atual
-        for (int j = 0; j < playlists[i].numMusicas; j++) {
+        fprintf(arq, "%s;%d", playlists[i].nome, playlists[i].quantidade);
 
-            // escreve uma linha no arquivo para cada música
-            fprintf(arq, "%s,%s,%s,%d,%s,%s\n",
-                playlists[i].nome,                            // nome da playlist
-                playlists[i].musicas[j].titulo,               // título da música
-                playlists[i].musicas[j].artista,              // artista
-                playlists[i].musicas[j].duracao,              // duração
-                playlists[i].musicas[j].genero,               // gênero
-                playlists[i].musicas[j].extra                 // extra (ano ou volume)
-            );
+        // percorre todas as músicas da playlist atual
+        for (int j = 0; j < playlists[i].quantidade; j++) {
+            int id = playlists[i].idsMusicas[j];     //pega o id da musica
+            fprintf(arq, ";%s", catalogo[id].titulo); // escreve o titulo da musica
         }
+        fprintf(arq, "\n");
     }
 
     // fecha o arquivo
     fclose(arq);
 
     return 1; // salvou com sucesso
+}
+
+//carrega todas as playlists do arquivo CSV e retorna o total de playlists carregadas
+int carregarPlaylists(Playlist **playlists) {
+    FILE *arquivo; 
+    
+    arquivo = fopen("data/playlists.csv", "r");
+    if (arquivo == NULL){
+        printf("Arquivo nao encontrado!\n");
+        return 0;
+    }
+
+    char linha[1024];   // buffer para ler cada linha do arquivo
+    int totalPlaylists = 0; //contador de playlists lidas
+
+    // lê linha por linha
+    while (fgets(linha, sizeof(linha), arquivo)) {
+        // remove o '\n'
+        linha[strcspn(linha, "\n")] = '\0';
+
+        // aloca ou realoca o vetor de playlists
+        if (*playlists == NULL) { //se ainda não existe nenhuma playlist
+            *playlists = malloc(sizeof(Playlist));
+            if (*playlists == NULL) {
+                printf("Erro de alocacao de memoria\n");
+                fclose(arquivo);
+                return 0;
+            }
+        } else { //se já existe
+            Playlist *temp = realloc(*playlists, sizeof(Playlist) * (totalPlaylists + 1));
+            if (temp == NULL) {
+                printf("Erro de realocacao de memoria\n");
+                fclose(arquivo);
+                return 0;
+            }
+            *playlists = temp;      
+        }
+
+        // separa cada parte da linha usando strtok
+        char *nomePlaylistStr = strtok(linha, ";"); //nome da playlist
+        char *qtdMusicasStr = strtok(NULL, ";");  //quantidade de músicas
+
+        // copia o nome da playlist
+        strcpy((*playlists)[totalPlaylists].nome, nomePlaylistStr);
+
+        // quantidade de músicas
+        int qtdMusicas = atoi(qtdMusicasStr); //converte quantidade para inteiro
+        (*playlists)[totalPlaylists].quantidade = qtdMusicas;
+
+        //define a capacidade inicial do vetor de IDs de músicas
+        if (qtdMusicas > CAPACIDADE_INICIAL) {
+            (*playlists)[totalPlaylists].capacidade = qtdMusicas;  //se a quantidade for maior que a capacidade inicial, usa qtdMusicas
+        } else {
+            (*playlists)[totalPlaylists].capacidade = CAPACIDADE_INICIAL; //caso nao, usa a capacidade inical
+        }
+
+
+        // aloca espaço para os IDs das músicas
+        (*playlists)[totalPlaylists].idsMusicas = malloc(sizeof(int) * (*playlists)[totalPlaylists].capacidade);
+        if ((*playlists)[totalPlaylists].idsMusicas == NULL) {
+            printf("Erro de alocacao de memoria para idsMusicas\n");
+            fclose(arquivo);
+            return 0;
+        }
+
+        // preenche os IDs das músicas
+        for (int i = 0; i < qtdMusicas; i++) {
+            char *idMusicaStr = strtok(NULL, ";"); //pega próximo campo
+            if (idMusicaStr != NULL) {
+                (*playlists)[totalPlaylists].idsMusicas[i] = atoi(idMusicaStr); //converte para inteiro
+            } else {
+                (*playlists)[totalPlaylists].idsMusicas[i] = -1; //se não tiver, coloca -1 (vazio)
+
+            }
+        }
+
+        totalPlaylists++; //incrementa contador de playlists
+    }
+
+    // fecha o arquivo
+    fclose(arquivo);
+
+    return totalPlaylists;
 }

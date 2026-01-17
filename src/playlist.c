@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "suporte.h"
 #include "playlist.h"
 #include "musica.h"
-#include "suporte.h"
+#include "dados.h"
+
 // --- Função: criarPlaylist ---
 // Objetivo: Inicializar os campos da struct e alocar a memória inicial
 void criarPlaylist(Playlist *ptrPlay, char *nomePlay){
@@ -16,11 +17,11 @@ void criarPlaylist(Playlist *ptrPlay, char *nomePlay){
 
     //ALOCAÇÃO DINÂMICA 
     // O malloc reserva espaço na memória RAM para 'capacidade' músicas.
-    ptrPlay->musicas = (Musica *) malloc(ptrPlay->capacidade * sizeof(Musica));
+    ptrPlay->idsMusicas = malloc(ptrPlay->capacidade * sizeof(int));
 
-
-    if(ptrPlay->musicas ==NULL){
-        printf("Erro fatal: Memória insuficiente para criar playlist!\n");
+    // Verifica se a alocação de memória falhou
+    if(ptrPlay->idsMusicas ==NULL){
+        printf("Erro fatal: Memoria insuficiente para criar playlist!\n");
         exit(1);
     }
 
@@ -28,75 +29,27 @@ void criarPlaylist(Playlist *ptrPlay, char *nomePlay){
 }
 // --- Função: adicionarMusicaNaPlaylist ---
 // Objetivo: Pedir dados ao usuário e gerenciar o array dinâmico.
-void adicionarMusicaPlaylist(Playlist *ptrPlay){
+void adicionarMusicaPlaylist(Playlist *ptrPlay, int idMusica, Musica *catalogo, int qtdMusicas){
+
+    // Expande o vetor se necessário
     if(ptrPlay->quantidade >= ptrPlay->capacidade){
         ptrPlay->capacidade *= 2;
-
-// O realloc tenta aumentar o bloco de memória existente ou move para um novo lugar maior.
-        ptrPlay->musicas = (Musica *) realloc(ptrPlay->musicas, ptrPlay->capacidade * sizeof(Musica));
-
-       if(ptrPlay->musicas == NULL) {
-            printf("Erro ao expandir memória da playlist!\n");
-            return;
+        ptrPlay->idsMusicas = realloc(ptrPlay->idsMusicas, ptrPlay->capacidade * sizeof(int));
+        if(ptrPlay->idsMusicas == NULL){
+            printf("Erro de alocação!\n");
+            exit(1);
         }
     }
-// Variável temporária para ler os dados
-    Musica music;
-    printf("\n--- Adicionando Música em '%s' ---\n", ptrPlay->nome);
-    // 2. Coleta de dados
-    printf("Titulo: ");
-    fgets(music.titulo,MAX_NOME,stdin);
-    music.titulo[strcspn(music.titulo, "\n")] = '\0';
 
-    printf("Duracao da musica(em segundos): ");
-    scanf("%d", music.duracao);
-    limparBuffer();
+    // Atualiza a duração total usando o índice direto
+    ptrPlay->duracaoTotal += catalogo[idMusica].duracao;
 
-    printf("Genero: ");
-    fgets(music.genero,MAX_GENERO,stdin);
-    music.genero[strcspn(music.genero, "\n")] = '\0';
+    // Adiciona o índice do catálogo na playlist
+    ptrPlay->idsMusicas[ptrPlay->quantidade] = idMusica;
+    ptrPlay->quantidade++;
 
-    // 3. Lógica para a Union (InfoExtra)
-    printf("Tipo (1-Album, 2-Single/Outro): ");
-    int tipo;
-    scanf("%d", &tipo);
-    limparBuffer();
-
-    if (tipo == 1) {
-        printf("Numero do Album: ");
-        scanf("%d", &music.info.numeroAlbum);
-        strcpy(music.extra, "Album"); // Guardamos string para o CSV (compatibilidade dados.c)
-    } else {
-        printf("Ano de Lancamento: ");
-        scanf("%d", &music.info.anoLancamento);
-        strcpy(music.extra, "Ano");
-    }
-    limparBuffer();
-
-    // 3. Lógica para a Union (InfoExtra)
-    printf("Tipo (1-Album, 2-Single/Outro): ");
-    int tipo;
-    scanf("%d", &tipo);
-    limparBuffer();
-
-    if (tipo == 1) {
-        printf("Volume do album: ");
-        scanf("%d", &music.info.numeroAlbum);
-        strcpy(music.extra, "Album"); // Guardamos string para o CSV (compatibilidade dados.c)
-    } else {
-        printf("Ano de Lancamento: ");
-        scanf("%d", &music.info.anoLancamento);
-        strcpy(music.extra, "Ano");
-    }
-    limparBuffer();
-
-    ptrPlay->musicas[ptrPlay->quantidade] = music;
-    
-    // 5. Atualização de totais
-    ptrPlay->duracaoTotal += music.duracao;
-    ptrPlay->quantidade++; // Incrementa para a próxima vez
-
-    printf("Música adicionada com sucesso!\n");
+    // Mensagem de sucesso
+    printf("Musica adicionada com sucesso na playlist!\n");
 }
 
 // --- Função: listarPlaylists ---
@@ -118,12 +71,32 @@ void listarPlaylists(Playlist *ptrListaPlay, int total) {
     }
 }
 
+void removerMusicaPlaylist(Playlist *ptrPlay, int idMusica) {
+    int musicaEncontrada = 0;
+    for (int i = 0; i < ptrPlay->quantidade; i++) {
+        if (ptrPlay->idsMusicas[i] == idMusica) {
+            // Shift das músicas restantes
+            for (int j = i; j < ptrPlay->quantidade - 1; j++) {
+                ptrPlay->idsMusicas[j] = ptrPlay->idsMusicas[j + 1];
+            }
+            ptrPlay->quantidade--;
+            musicaEncontrada = 1;
+            printf("Musica removida com sucesso!\n");
+            break;
+        }
+    }
+    if (!musicaEncontrada) {
+        printf("Musica nao encontrada na playlist.\n");
+    }
+}
+
+
 // --- Função: liberarPlaylists ---
 // Objetivo: Evitar vazamento de memória (Memory Leak) ao sair.
 void liberarPlaylists(Playlist *playlists, int total) {
     for(int i = 0; i < total; i++) {
         // Para cada playlist, liberamos o vetor de músicas criado com malloc
-        free(playlists[i].musicas);
+        free(playlists[i].idsMusicas);
     }
 
      

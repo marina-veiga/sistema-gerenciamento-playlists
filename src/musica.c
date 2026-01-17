@@ -9,6 +9,7 @@ diretamente com as operações sobre as músicas nas playlists*/
 #include <ctype.h>  // Para tolower()
 #include "musica.h"
 #include "playlist.h"  // Para ter a definição completa de Playlist
+#include "suporte.h"
 
 // FUNÇÔES PRINCIPAIS
 
@@ -16,7 +17,7 @@ void exibirMusica(Musica m) {
     int minutos, segundos;
     
     // Converte duração
-    converterSegundosParaMinutos(m.duracao, &minutos, &segundos);
+    segundosParaMinutos(m.duracao, &minutos, &segundos);
     
     // Exibe os dados
     printf("\nEXBIR MUSICA:\n");
@@ -26,137 +27,144 @@ void exibirMusica(Musica m) {
     printf("Genero:   %s\n", m.genero);
     
     // InforExtra
-    if (m.info.anoLancamento != 0) {
-        printf("Ano de Lancamento:      %d\n", m.info.anoLancamento);
+    if (m.tipoInfo == 1) {
+        printf("Ano de Lancamento: %d\n", m.info.anoLancamento);
+    } else if (m.tipoInfo == 2) {
+        printf("Volume do Album: %d\n", m.info.volumeAlbum);
     }
     printf("\n");
 }
 
-int buscarMusicaPorTitulo(Playlist *p, char *titulo) {
-    // Verifica se a playlist é válida
-    if (p == NULL || p->musicas == NULL) {
-        printf("Playlist inválida!\n");
-        return -1;
-    }
-    
-    if (p->quantidade == 0) {
-        printf("Playlist vazia!\n");
-        return -1;
-    }
-    
-    // Remove possível \n do final
+// função que busca música pelo título
+int buscarMusicaPorTitulo(Musica *catalogo, int quantidade, char *titulo) {
+    // remove o \n do final, se tiver
     titulo[strcspn(titulo, "\n")] = '\0';
-    
-    // Busca a música
-    for (int i = 0; i < p->quantidade; i++) {
-        if (compararStringsInsensitivo(p->musicas[i].titulo, titulo) == 0) {
-            printf("Música encontrada na posição %d\n", i + 1);
-            return i; // Retorna o índice
+
+    // cria uma cópia do título e coloca em minúsculas
+    char tituloMinusculo[100];
+    int i = 0;
+    while (titulo[i] != '\0') {
+        tituloMinusculo[i] = titulo[i];
+        i++;
+    }
+    tituloMinusculo[i] = '\0';
+    paraMinusculo(tituloMinusculo);
+
+    // percorre todo o catálogo
+    for (int j = 0; j < quantidade; j++) {
+        // cria uma cópia do título do catálogo e coloca em minúsculas
+        char catalogoMinusculo[100];
+        i = 0;
+        while (catalogo[j].titulo[i] != '\0') {
+            catalogoMinusculo[i] = catalogo[j].titulo[i];
+            i++;
+        }
+        catalogoMinusculo[i] = '\0';
+        paraMinusculo(catalogoMinusculo);
+
+        // compara as strings
+        int igual = 1; // assume que são iguais
+        i = 0;
+        while (tituloMinusculo[i] != '\0' || catalogoMinusculo[i] != '\0') {
+            if (tituloMinusculo[i] != catalogoMinusculo[i]) {
+                igual = 0; // se algum caractere for diferente, não são iguais
+                break;
+            }
+            i++;
+        }
+
+        if (igual == 1) {
+            return j; // encontrou e retorna o índice
         }
     }
-    
-    printf("Música '%s' não encontrada!\n", titulo);
-    return -1; // Não encontrou
+
+    return -1; // não encontrou
 }
 
-
-int buscarMusicaPorArtista(Playlist *p, char *artista) {
-    // Verifica se a playlist é válida
-    if (p == NULL || p->musicas == NULL) {
-        printf("Playlist inválida!\n");
-        return -1;
-    }
-    
-    if (p->quantidade == 0) {
-        printf("Playlist vazia!\n");
-        return -1;
-    }
-    
-    // Remove possível \n do final
+int buscarMusicaPorArtista(Musica *catalogo, int qtdMusicas, char *artista) {
     artista[strcspn(artista, "\n")] = '\0';
-    
-    // Busca a música
-    for (int i = 0; i < p->quantidade; i++) {
-        if (compararStringsInsensitivo(p->musicas[i].artista, artista) == 0) {
-            printf("Música do artista encontrada na posição %d\n", i + 1);
-            return i; // Retorna o índice da primeira encontrada
+
+    char artistaMinusculo[100];
+    strcpy(artistaMinusculo, artista);
+    paraMinusculo(artistaMinusculo);
+
+    for (int i = 0; i < qtdMusicas; i++) {
+        char catalogoArtistaMinusculo[100];
+        strcpy(catalogoArtistaMinusculo, catalogo[i].artista);
+        paraMinusculo(catalogoArtistaMinusculo);
+
+        if (contemSubstring(catalogoArtistaMinusculo, artistaMinusculo)) {
+            return i; // retorna o índice da primeira música encontrada
+            exibirMusica(catalogo[i]);
         }
     }
-    
-    printf("Nenhuma música do artista '%s' encontrada!\n", artista);
-    return -1; // Não encontrou
+
+    return -1; 
+}
+static int compararParaOrdenarTitulo(const void *elem1, const void *elem2) {
+
+    // Converte os elementos genéricos para Musica
+    Musica *musica1 = (Musica *)elem1;
+    Musica *musica2 = (Musica *)elem2;
+
+    // Compara os títulos das duas músicas
+    return compararStrings(musica1->titulo, musica2->titulo);
+}
+void ordenarMusicasPorTitulo(Musica *catalogo, int qtdMusicas) {
+    qsort(catalogo, qtdMusicas, sizeof(Musica), compararParaOrdenarTitulo);
+    printf("Catalogo ordenado por titulo com sucesso!\n");
 }
 
 
-static int compararParaOrdenarTitulo(const void *a, const void *b) {
-    const Musica *musicaA = (const Musica *)a;
-    const Musica *musicaB = (const Musica *)b;
-    
-    return compararStringsInsensitivo(musicaA->titulo, musicaB->titulo);
+static int compararParaOrdenarDuracao(const void *elem1, const void *elem2) {
+    Musica *musica1 = (Musica *)elem1;
+    Musica *musica2 = (Musica *)elem2;
+
+    return musica1->duracao - musica2->duracao;
 }
 
-void ordenarMusicasPorTitulo(Playlist *p) {
-    if (p == NULL || p->musicas == NULL) {
-        printf("Playlist inválida!\n");
-        return;
-    }
-    
-    if (p->quantidade < 2) {
-        printf("Playlist tem apenas %d música. Nada para ordenar.\n", p->quantidade);
-        return;
-    }
-    
-    // Usa qsort para ordenar
-    qsort(p->musicas, p->quantidade, sizeof(Musica), compararParaOrdenarTitulo);
-    
-    printf("Playlist ordenada por título com sucesso!\n");
+void ordenarMusicasPorDuracao(Musica *catalogo, int qtdMusicas) {
+    qsort(catalogo, qtdMusicas, sizeof(Musica), compararParaOrdenarDuracao);
+    printf("Catalogo ordenado por duracao com sucesso!\n");
 }
 
+void exibirTodasMusicasDaPlaylist(Playlist *playlist, Musica *catalogo, int qtdMusicas) {
 
-static int compararParaOrdenarDuracao(const void *a, const void *b) {
-    const Musica *musicaA = (const Musica *)a;
-    const Musica *musicaB = (const Musica *)b;
-    
-    // Ordena do menor para o maior (crescente)
-    return musicaA->duracao - musicaB->duracao;
-}
-
-
-void ordenarMusicasPorDuracao(Playlist *p) {
-    if (p == NULL || p->musicas == NULL) {
-        printf("Playlist inválida!\n");
+    // Verifica se a playlist existe e se a lista de IDs foi criada
+    if (playlist == NULL || playlist->idsMusicas == NULL) {
+        printf("Playlist invalida!\n");
         return;
     }
-    
-    if (p->quantidade < 2) {
-        printf("ℹPlaylist tem apenas %d música. Nada para ordenar.\n", p->quantidade);
-        return;
-    }
-    
-    // Usa qsort para ordenar
-    qsort(p->musicas, p->quantidade, sizeof(Musica), compararParaOrdenarDuracao);
-    
-    printf("Playlist ordenada por duração (crescente) com sucesso!\n");
-}
 
-void exibirTodasMusicasDaPlaylist(Playlist *p) {
-    if (p == NULL || p->musicas == NULL) {
-        printf("Playlist inválida!\n");
-        return;
-    }
-    
-    if (p->quantidade == 0) {
+    // Verifica se a playlist esta vazia
+    if (playlist->quantidade == 0) {
         printf("Playlist vazia!\n");
         return;
     }
-    
-    printf("\nPLAYLIST: %s (%d músicas)\n", p->nome, p->quantidade);
-    printf("\n");
-    
-    for (int i = 0; i < p->quantidade; i++) {
-        printf("\n[%d] ", i + 1);
-        exibirMusica(p->musicas[i]);
+
+    // Mostra o nome da playlist e a quantidade de musicas
+    printf("\nPLAYLIST: %s (%d musicas)\n", playlist->nome, playlist->quantidade);
+    printf("----------------------------------\n");
+
+    // Percorre todas as musicas que estao na playlist
+    for (int i = 0; i < playlist->quantidade; i++) {
+
+        // Pega o ID da musica guardado nessa posicao da playlist
+        int idDaMusica = playlist->idsMusicas[i];
+
+        // Verifica se o ID da musica existe dentro do catalogo
+        if (idDaMusica >= 0 && idDaMusica < qtdMusicas) {
+
+            // Mostra o numero da musica na playlist
+            printf("\n[%d]\n", i + 1);
+
+            // Exibe os dados da musica correta usando o catalogo
+            exibirMusica(catalogo[idDaMusica]);
+
+        } else {
+            // Caso o ID nao seja valido
+            printf("\n[%d] Musica invalida (ID %d)\n",
+                   i + 1, idDaMusica);
+        }
     }
 }
-
-
