@@ -22,5 +22,7 @@ void listarPlaylists(Playlist *ptrListaPlay, int total);
 void liberarPlaylists(Playlist *p, int total);
 void adicionarMusicaPlaylist(Playlist *ptrPlay, int idMusica, Musica *catalogo, int qtdMusicas);
 void removerMusicaPlaylist(Playlist *ptrPlay, int idMusica);
+void ordenarMusicasPorTituloNaPlaylist(Playlist *ptrPlay, Musica *catalogo);
+void ordenarMusicasPorDuracaoNaPlaylist(Playlist *ptrPlay, Musica *catalogo);
 
 #endif

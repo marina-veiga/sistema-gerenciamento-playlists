@@ -34,12 +34,6 @@ int buscarMusicaPorTitulo(Musica *catalogo, int qtdMusicas, char *titulo);
 // Busca uma música pelo artista (substring)
 int buscarMusicaPorArtista(Musica *catalogo, int qtdMusicas, char *artista);
 
-// Ordena o catálogo de músicas por título (ordem alfabética)
-void ordenarMusicasPorTitulo(Musica *catalogo, int qtdMusicas);
-
-// Ordena o catálogo de músicas por duração (crescente)
-void ordenarMusicasPorDuracao(Musica *catalogo, int qtdMusicas);
-
 // Exibe todas as músicas de uma playlist usando o catálogo
 void exibirTodasMusicasDaPlaylist(struct Playlist *playlist, Musica *catalogo, int qtdMusicas);
 #endif

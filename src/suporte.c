@@ -110,7 +110,7 @@ void menuPrincipal(Playlist **playlists, int *qtdPlaylists, Musica *catalogo, in
         scanf("%d", &opcao);
         limparBuffer(); 
 
-        opcao = validaInteiro(opcao, 0, 7);  //garante que a opção esteja no intervalo
+        opcao = validaInteiro(opcao, 0, 8);  //garante que a opção esteja no intervalo
 
         switch (opcao) { 
 
@@ -256,14 +256,49 @@ void menuPrincipal(Playlist **playlists, int *qtdPlaylists, Musica *catalogo, in
 
             break;
         }
-        case 7: { // Ordenar músicas por título
-            ordenarMusicasPorTitulo(catalogo, qtdMusicas); //ordenar músicas do catálogo por titulo
-            printf("Catalogo ordenado por titulo com sucesso!\n");
+        case 7: { // Ordenar músicas por títul
+
+            if (*qtdPlaylists == 0) {
+                printf("Nao ha playlists criadas ainda!\n");
+                break;
+            }
+
+            int indice;
+            printf("Digite o indice da playlist (1 a %d): ", *qtdPlaylists);
+            scanf("%d", &indice);
+            limparBuffer();
+            indice= indice - 1;
+
+            if (indice < 0 || indice >= *qtdPlaylists) {
+                printf("Indice invalido!\n");
+            break;
+            }
+
+            ordenarMusicasPorTituloNaPlaylist(&(*playlists)[indice], catalogo);
+            salvarPlaylists(*playlists, *qtdPlaylists, catalogo);
+            printf("Playlist ordenada por titulo com sucesso!\n");
             break;
         }
         case 8:{ //ordenar músicas por duração
-            ordenarMusicasPorDuracao(catalogo, qtdMusicas); //ordenar músicas do catálogo por duração
-            printf("Catalogo ordenado por duracao com sucesso!\n");
+            if (*qtdPlaylists == 0) {
+                printf("Nao ha playlists criadas ainda!\n");
+                break;
+            }
+
+            int indice;
+            printf("Digite o indice da playlist (1 a %d): ", *qtdPlaylists);
+            scanf("%d", &indice);
+            limparBuffer();
+            indice= indice -1;
+
+            if (indice < 0 || indice >= *qtdPlaylists) {
+            printf("Indice invalido!\n");
+            break;
+            }
+
+            ordenarMusicasPorDuracaoNaPlaylist(&(*playlists)[indice], catalogo);
+            salvarPlaylists(*playlists, *qtdPlaylists, catalogo);
+            printf("Playlist ordenada por duracao com sucesso!\n");
             break;
         }
         case 0: {  //sair do program

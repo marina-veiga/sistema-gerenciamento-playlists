@@ -101,32 +101,6 @@ int buscarMusicaPorArtista(Musica *catalogo, int qtdMusicas, char *artista) {
 
     return -1; 
 }
-static int compararParaOrdenarTitulo(const void *elem1, const void *elem2) {
-
-    // Converte os elementos genéricos para Musica
-    Musica *musica1 = (Musica *)elem1;
-    Musica *musica2 = (Musica *)elem2;
-
-    // Compara os títulos das duas músicas
-    return compararStrings(musica1->titulo, musica2->titulo);
-}
-void ordenarMusicasPorTitulo(Musica *catalogo, int qtdMusicas) {
-    qsort(catalogo, qtdMusicas, sizeof(Musica), compararParaOrdenarTitulo);
-    printf("Catalogo ordenado por titulo com sucesso!\n");
-}
-
-
-static int compararParaOrdenarDuracao(const void *elem1, const void *elem2) {
-    Musica *musica1 = (Musica *)elem1;
-    Musica *musica2 = (Musica *)elem2;
-
-    return musica1->duracao - musica2->duracao;
-}
-
-void ordenarMusicasPorDuracao(Musica *catalogo, int qtdMusicas) {
-    qsort(catalogo, qtdMusicas, sizeof(Musica), compararParaOrdenarDuracao);
-    printf("Catalogo ordenado por duracao com sucesso!\n");
-}
 
 void exibirTodasMusicasDaPlaylist(Playlist *playlist, Musica *catalogo, int qtdMusicas) {
 

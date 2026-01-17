@@ -90,6 +90,44 @@ void removerMusicaPlaylist(Playlist *ptrPlay, int idMusica) {
     }
 }
 
+void ordenarMusicasPorTituloNaPlaylist(Playlist *ptrPlay, Musica *catalogo) {
+    if (ptrPlay == NULL || ptrPlay->quantidade < 2) return;
+
+    for (int i = 0; i < ptrPlay->quantidade - 1; i++) {
+        for (int j = 0; j < ptrPlay->quantidade - i - 1; j++) {
+
+            Musica *m1 = &catalogo[ptrPlay->idsMusicas[j]];
+            Musica *m2 = &catalogo[ptrPlay->idsMusicas[j+1]];
+
+            if (strcmp(m1->titulo, m2->titulo) > 0) {
+                int temp = ptrPlay->idsMusicas[j];
+                ptrPlay->idsMusicas[j] = ptrPlay->idsMusicas[j+1];
+                ptrPlay->idsMusicas[j+1] = temp;
+            }
+        }
+    }
+}
+
+
+void ordenarMusicasPorDuracaoNaPlaylist(Playlist *ptrPlay, Musica *catalogo) {
+    if (ptrPlay == NULL || ptrPlay->quantidade < 2) return;
+
+    for (int i = 0; i < ptrPlay->quantidade - 1; i++) {
+        for (int j = 0; j < ptrPlay->quantidade - i - 1; j++) {
+
+            Musica *m1 = &catalogo[ptrPlay->idsMusicas[j]];
+            Musica *m2 = &catalogo[ptrPlay->idsMusicas[j+1]];
+
+            if (m1->duracao > m2->duracao) {
+                int temp = ptrPlay->idsMusicas[j];
+                ptrPlay->idsMusicas[j] = ptrPlay->idsMusicas[j+1];
+                ptrPlay->idsMusicas[j+1] = temp;
+            }
+        }
+    }
+}
+
+
 
 // --- Função: liberarPlaylists ---
 // Objetivo: Evitar vazamento de memória (Memory Leak) ao sair.
