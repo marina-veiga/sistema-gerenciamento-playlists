@@ -84,15 +84,17 @@ int buscarMusicaPorTitulo(Musica *catalogo, int quantidade, char *titulo) {
 int buscarMusicaPorArtista(Musica *catalogo, int qtdMusicas, char *artista) {
     artista[strcspn(artista, "\n")] = '\0';
 
+// Cria uma variável auxiliar para armazenar o termo de busca em letras minúsculas
     char artistaMinusculo[100];
     strcpy(artistaMinusculo, artista);
     paraMinusculo(artistaMinusculo);
 
+// Iteração sobre o catálogo
     for (int i = 0; i < qtdMusicas; i++) {
         char catalogoArtistaMinusculo[100];
         strcpy(catalogoArtistaMinusculo, catalogo[i].artista);
         paraMinusculo(catalogoArtistaMinusculo);
-
+// Verifica se o termo pesquisado está contido no nome do artista atual
         if (contemSubstring(catalogoArtistaMinusculo, artistaMinusculo)) {
             return i; // retorna o índice da primeira música encontrada
             exibirMusica(catalogo[i]);

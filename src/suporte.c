@@ -107,7 +107,13 @@ void menuPrincipal(Playlist **playlists, int *qtdPlaylists, Musica *catalogo, in
         printf("0 - Sair\n");
         printf("Escolha uma opcao: ");
 
-        scanf("%d", &opcao);
+        if(scanf("%d", &opcao) != 1){
+        printf("Erro: Voce deve digitar apenas numeros!\n");
+        limparBuffer(); // Remove o lixo (letras) que ficou no buffer
+        opcao = -1;     // Reseta a opção para não sair do loop
+        continue;       // Volta para o início do while
+
+        }
         limparBuffer(); 
 
         opcao = validaInteiro(opcao, 0, 8);  //garante que a opção esteja no intervalo
@@ -164,7 +170,6 @@ void menuPrincipal(Playlist **playlists, int *qtdPlaylists, Musica *catalogo, in
             printf("Digite o indice da playlist (1 a %d): ", *qtdPlaylists);
             scanf("%d", &indice);
             limparBuffer();
-
             indice = indice - 1; // ajusta para índice do vetor
 
             if (indice < 0 || indice >= *qtdPlaylists) {
@@ -187,6 +192,7 @@ void menuPrincipal(Playlist **playlists, int *qtdPlaylists, Musica *catalogo, in
             printf("Digite o indice da playlist: ");
             scanf("%d", &indice);
             limparBuffer();
+            indice= indice - 1;
 
             if (indice < 0 || indice >= *qtdPlaylists) {
                 printf("Indice invalido!\n");
@@ -219,6 +225,7 @@ void menuPrincipal(Playlist **playlists, int *qtdPlaylists, Musica *catalogo, in
             printf("Digite o indice da playlist: ");
             scanf("%d", &indice);
             limparBuffer();
+            indice = indice - 1;
 
             if (indice < 0 || indice >= *qtdPlaylists) {
                 printf("Indice invalido!\n");
